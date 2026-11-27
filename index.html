@@ -91,7 +91,7 @@ if(!name)askName();
 
 const chat=document.getElementById('chat');
 const input=document.getElementById('input');
-let current=null,unsubMsgs=null,unsubPres=null;
+let current=null,unsubMsgs=null,unsubPres=null,unsubConn=null;
 
 function paintMe(){
   document.getElementById('meName').textContent=name;
@@ -120,6 +120,7 @@ function renderMembers(names){
   });
 }
 function join(r){
+  if(unsubConn)unsubConn();
   if(unsubMsgs)unsubMsgs();
   if(unsubPres)unsubPres();
   if(current)remove(ref(db,`presence/${current.id}/${uid}`));
@@ -128,7 +129,7 @@ function join(r){
   input.placeholder='كتب رسالة لـ # '+r.label+'...';
   document.querySelectorAll('.group,#tabs button').forEach(x=>x.classList.toggle('active',x.dataset.id===r.id));
   const p=ref(db,`presence/${r.id}/${uid}`);
-  set(p,{name});onDisconnect(p).remove();
+  unsubConn=onValue(ref(db,'.info/connected'),s=>{if(s.val()){onDisconnect(p).remove();set(p,{name})}});
   unsubMsgs=onChildAdded(query(ref(db,`rooms/${r.id}/messages`),limitToLast(100)),s=>addMsg(s.val()));
   unsubPres=onValue(ref(db,`presence/${r.id}`),s=>{
     renderMembers(Object.values(s.val()||{}).map(x=>x.name));
