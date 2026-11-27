@@ -6,73 +6,149 @@
 <title>NOKHBA CHAT</title>
 <style>
 *{box-sizing:border-box;font-family:sans-serif}
-body{margin:0;background:#0f1115;color:#fff;display:flex;height:100vh;overflow:hidden}
+body{margin:0;background:#0f1115;color:#fff;display:flex;height:100vh;height:100dvh;overflow:hidden}
 .sidebar{width:260px;background:#14161c;border-left:1px solid #222;display:flex;flex-direction:column}
 .logo{padding:18px;font-size:22px;font-weight:900;text-align:center}
 .logo span{color:#a855f7}
-.search{margin:0 12px 12px;background:#1e2128;padding:10px 12px;border-radius:10px;color:#888;font-size:13px}
 .group-title{padding:0 15px 8px;font-size:12px;color:#888}
-.group{margin:0 10px;padding:11px 12px;border-radius:10px;cursor:pointer;display:flex;gap:10px;align-items:center}
-.group.active{background:#2a1a3a;border:1px solid #7c3aed}
-.group .icon{width:32px;height:32px;background:#7c3aed;border-radius:8px;display:grid;place-items:center}
-.group small{display:block;color:#888;font-size:11px}
-.user{margin-top:auto;padding:14px;border-top:1px solid #222;display:flex;gap:10px;align-items:center}
-.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#ec4899);display:grid;place-items:center;font-weight:900}
+.group{margin:0 10px 4px;padding:11px 12px;border-radius:10px;cursor:pointer;display:flex;gap:10px;align-items:center;border:1px solid transparent}
+.group.active{background:#2a1a3a;border-color:#7c3aed}
+.group .icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center}
+.user{margin-top:auto;padding:14px;border-top:1px solid #222;display:flex;gap:10px;align-items:center;cursor:pointer}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#ec4899);display:grid;place-items:center;font-weight:900;flex-shrink:0}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
 .top{padding:14px 18px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center}
 .top b{font-size:18px}.top small{color:#888}
+#tabs{display:none;gap:8px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid #222}
+#tabs button{background:#1e2128;color:#fff;border:1px solid #333;border-radius:20px;padding:6px 14px;white-space:nowrap}
+#tabs button.active{background:#7c3aed;border-color:#7c3aed}
 #chat{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:16px}
 .msg{display:flex;gap:10px}
 .msg .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:900;flex-shrink:0}
-.bubble{max-width:70%}
+.bubble{max-width:75%}
 .bubble .name{font-size:12px;color:#a855f7;margin-bottom:4px}
 .bubble .text{background:#1e2128;padding:10px 13px;border-radius:12px;line-height:1.5;word-break:break-word}
 .me{flex-direction:row-reverse}.me .text{background:#7c3aed}
 #form{display:flex;gap:10px;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:#14161c}
-#form input{flex:1;min-width:0;background:#1e2128;border:none;outline:none;color:#fff;padding:13px 15px;border-radius:25px}
+#form input{flex:1;min-width:0;background:#1e2128;border:none;outline:none;color:#fff;padding:13px 15px;border-radius:25px;font-size:16px}
 #form button{background:#7c3aed;border:none;color:#fff;padding:12px 18px;border-radius:25px;font-weight:900;cursor:pointer}
-.members{width:220px;background:#14161c;border-right:1px solid #222;padding:15px}
+.members{width:220px;background:#14161c;border-right:1px solid #222;padding:15px;overflow-y:auto}
 .member{display:flex;gap:10px;align-items:center;padding:8px 0}
 .dot{width:8px;height:8px;background:#22c55e;border-radius:50%}
-@media(max-width:800px){.members,.sidebar{display:none}}
+@media(max-width:800px){.members,.sidebar{display:none}#tabs{display:flex}}
 </style>
 </head>
 <body>
 <div class="sidebar">
 <div class="logo">NOKHBA <span>CHAT</span></div>
-<div class="search">🔍 قلب على مجموعة...</div>
 <div class="group-title">المجموعات</div>
-<div class="group active" onclick="switchRoom(this,'العام')"><div class="icon">#</div><div><b>العام</b><small>3 أعضاء متصلين</small></div></div>
-<div class="group" onclick="switchRoom(this,'الألعاب')"><div class="icon" style="background:#ec4899">🎮</div><div><b>الألعاب</b><small>12 عضو</small></div></div>
-<div class="group" onclick="switchRoom(this,'الميمز')"><div class="icon" style="background:#f59e0b">😂</div><div><b>الميمز</b><small>48 عضو</small></div></div>
-<div class="group" onclick="switchRoom(this,'الموسيقى')"><div class="icon" style="background:#22c55e">🎵</div><div><b>الموسيقى</b><small>7 عضو</small></div></div>
-<div class="user"><div class="avatar">A</div><div><b>ayoub</b><div style="font-size:11px;color:#22c55e">● متصل</div></div></div>
+<div id="rooms"></div>
+<div class="user" id="me" title="بدل السمية"><div class="avatar" id="meAv"></div><div><b id="meName"></b><div style="font-size:11px;color:#22c55e">● متصل</div></div></div>
 </div>
 <div class="main">
-<div class="top"><div><b id="roomName"># العام</b><br><small>3 أعضاء متصلين</small></div><div>👥</div></div>
+<div class="top"><div><b id="roomName"></b><br><small id="count"></small></div><div id="who" style="font-size:12px;color:#888"></div></div>
+<div id="tabs"></div>
 <div id="chat"></div>
-<form id="form"><input id="input" placeholder="كتب رسالة لـ # العام..." autocomplete="off"><button>➤</button></form>
+<form id="form"><input id="input" autocomplete="off" maxlength="500"><button>➤</button></form>
 </div>
-<div class="members"><b>الأعضاء — 3</b><div class="member"><div class="avatar" style="width:32px;height:32px;font-size:13px">A</div>ayoub <span class="dot"></span></div><div class="member"><div class="avatar" style="width:32px;height:32px;font-size:13px;background:#22c55e">S</div>salma <span class="dot"></span></div><div class="member"><div class="avatar" style="width:32px;height:32px;font-size:13px;background:#f59e0b">Y</div>yassine <span class="dot"></span></div></div>
-<script>
-let current='العام';
-let all={};
-try{all=JSON.parse(localStorage.getItem('nokhba_full')||'{}')}catch(e){all={}}
-if(!all['العام']) all['العام']=[{name:'salma',text:'أهلا أولد النخبة، مرحبا بيك فـ NOKHBA CHAT 👑',color:'#22c55e',me:false},{name:'ayoub',text:'هادا حسن من PARADOX',color:'#a855f7',me:true}];
-const chat=document.getElementById('chat');
-function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function render(){
- chat.innerHTML='';
- (all[current]||[]).forEach(m=>{
-  const d=document.createElement('div'); d.className='msg '+(m.me?'me':'');
-  d.innerHTML=`<div class="av" style="background:${m.color}">${esc(m.name[0].toUpperCase())}</div><div class="bubble"><div class="name">${esc(m.name)}</div><div class="text">${esc(m.text)}</div></div>`;
-  chat.appendChild(d);
- }); chat.scrollTop=chat.scrollHeight;
- try{localStorage.setItem('nokhba_full',JSON.stringify(all))}catch(e){}
+<div class="members"><b id="memTitle"></b><div id="memList"></div></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getDatabase,ref,push,onChildAdded,query,limitToLast,serverTimestamp,set,remove,onDisconnect,onValue} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyACgDxnIYNXf8_QE2hs6U7-GPyVBXcsLXY",
+  authDomain:"nokhba-chat.firebaseapp.com",
+  databaseURL:"https://nokhba-chat-default-rtdb.firebaseio.com",
+  projectId:"nokhba-chat",
+  storageBucket:"nokhba-chat.firebasestorage.app",
+  messagingSenderId:"426302609440",
+  appId:"1:426302609440:web:abc0ba4456ebc1f07f4445"
+});
+const db=getDatabase(app);
+
+const ROOMS=[
+  {id:'general',label:'العام',icon:'#',bg:'#7c3aed'},
+  {id:'games',label:'الألعاب',icon:'🎮',bg:'#ec4899'},
+  {id:'memes',label:'الميمز',icon:'😂',bg:'#f59e0b'},
+  {id:'music',label:'الموسيقى',icon:'🎵',bg:'#22c55e'}
+];
+const COLORS=['#a855f7','#22c55e','#f59e0b','#ec4899','#3b82f6','#ef4444','#14b8a6'];
+const colorOf=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;return COLORS[h%COLORS.length]};
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+let uid=store.get('nk_uid');
+if(!uid){uid=Math.random().toString(36).slice(2,12);store.set('nk_uid',uid)}
+let name=store.get('nk_name');
+function askName(){
+  let n=(prompt('شنو هي سميتك؟')||'').trim().slice(0,20);
+  if(!n)n='guest'+Math.floor(Math.random()*9000+1000);
+  name=n;store.set('nk_name',n);
 }
-function switchRoom(el,name){document.querySelectorAll('.group').forEach(g=>g.classList.remove('active'));el.classList.add('active');current=name;document.getElementById('roomName').innerText='# '+name;document.getElementById('input').placeholder='كتب رسالة لـ # '+name+'...';if(!all[current])all[current]=[];render();}
-document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const inp=document.getElementById('input');const t=inp.value.trim();if(!t)return;if(!all[current])all[current]=[];all[current].push({name:'ayoub',text:t,color:'#a855f7',me:true});render();inp.value='';setTimeout(()=>{const reps=['واخا فهمتك 😂','بصح أولد النخبة','هادي واعرة','كمل كمل','NOKHBA ديما الفوق 👑'];all[current].push({name:'salma',text:reps[Math.floor(Math.random()*reps.length)],color:'#22c55e',me:false});render();},700);});
-render();
+if(!name)askName();
+
+const chat=document.getElementById('chat');
+const input=document.getElementById('input');
+let current=null,unsubMsgs=null,unsubPres=null;
+
+function paintMe(){
+  document.getElementById('meName').textContent=name;
+  const a=document.getElementById('meAv');a.textContent=name[0].toUpperCase();a.style.background=colorOf(name);
+  document.getElementById('who').textContent=name;
+}
+function addMsg(m){
+  if(!m||!m.name||!m.text)return;
+  const mine=m.uid===uid;
+  const row=el('div','msg'+(mine?' me':''));
+  const av=el('div','av',String(m.name)[0].toUpperCase());av.style.background=colorOf(String(m.name));
+  const b=el('div','bubble');
+  b.append(el('div','name',m.name),el('div','text',m.text));
+  row.append(av,b);chat.appendChild(row);
+  chat.scrollTop=chat.scrollHeight;
+}
+function renderMembers(names){
+  document.getElementById('count').textContent=names.length+' أعضاء متصلين';
+  document.getElementById('memTitle').textContent='الأعضاء — '+names.length;
+  const list=document.getElementById('memList');list.innerHTML='';
+  names.forEach(n=>{
+    const r=el('div','member');
+    const a=el('div','avatar',String(n)[0].toUpperCase());
+    a.style.cssText='width:32px;height:32px;font-size:13px;background:'+colorOf(String(n));
+    r.append(a,el('span',null,n),el('span','dot'));list.appendChild(r);
+  });
+}
+function join(r){
+  if(unsubMsgs)unsubMsgs();
+  if(unsubPres)unsubPres();
+  if(current)remove(ref(db,`presence/${current.id}/${uid}`));
+  current=r;chat.innerHTML='';
+  document.getElementById('roomName').textContent='# '+r.label;
+  input.placeholder='كتب رسالة لـ # '+r.label+'...';
+  document.querySelectorAll('.group,#tabs button').forEach(x=>x.classList.toggle('active',x.dataset.id===r.id));
+  const p=ref(db,`presence/${r.id}/${uid}`);
+  set(p,{name});onDisconnect(p).remove();
+  unsubMsgs=onChildAdded(query(ref(db,`rooms/${r.id}/messages`),limitToLast(100)),s=>addMsg(s.val()));
+  unsubPres=onValue(ref(db,`presence/${r.id}`),s=>{
+    renderMembers(Object.values(s.val()||{}).map(x=>x.name));
+  });
+}
+const roomsBox=document.getElementById('rooms'),tabs=document.getElementById('tabs');
+ROOMS.forEach(r=>{
+  const g=el('div','group');g.dataset.id=r.id;
+  const ic=el('div','icon',r.icon);ic.style.background=r.bg;
+  g.append(ic,el('b',null,r.label));g.onclick=()=>join(r);roomsBox.appendChild(g);
+  const t=el('button',null,r.icon+' '+r.label);t.dataset.id=r.id;t.onclick=()=>join(r);tabs.appendChild(t);
+});
+document.getElementById('me').onclick=()=>{askName();paintMe();join(current)};
+document.getElementById('form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const t=input.value.trim();if(!t)return;
+  push(ref(db,`rooms/${current.id}/messages`),{name,uid,text:t.slice(0,500),ts:serverTimestamp()});
+  input.value='';
+});
+paintMe();join(ROOMS[0]);
 </script>
 </body>
 </html>
